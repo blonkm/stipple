@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Stipple — все точечные вариации email</title>
+<meta name="description" content="Stipple генерирует все возможные вариации email-адреса с точками в локальной части. Локально в браузере, с отметками «использовано»." />
+<meta name="theme-color" content="#171717" />
+<meta property="og:title" content="Stipple — email dot variations" />
+<meta property="og:description" content="Все возможные точечные вариации одного email-адреса. Локально, без серверов." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23171717'/%3E%3Ccircle cx='9' cy='16' r='2.4' fill='%23ffffff'/%3E%3Ccircle cx='16' cy='16' r='2.4' fill='%23ffffff'/%3E%3Ccircle cx='23' cy='16' r='2.4' fill='%23ffffff'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #171717;
+    --ink-2: #4d4d4d;
+    --ink-3: #666666;
+    --ink-4: #808080;
+    --bg: #ffffff;
+    --gray-50: #fafafa;
+    --gray-100: #ebebeb;
+    --gray-200: #e5e5e5;
+    --link: #0072f5;
+    --focus: hsla(212, 100%, 48%, 1);
+    --badge-bg: #ebf5ff;
+    --badge-text: #0068d6;
+    --used: #1ea64a;
+    --used-bg: #e6f7ec;
+    --ring: rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+    --ring-light: rgb(235, 235, 235) 0px 0px 0px 1px;
+    --card-shadow:
+      rgba(0, 0, 0, 0.08) 0px 0px 0px 1px,
+      rgba(0, 0, 0, 0.04) 0px 2px 2px,
+      rgba(0, 0, 0, 0.04) 0px 8px 8px -8px,
+      #fafafa 0px 0px 0px 1px inset;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    font-size: 16px;
+  }
+
+  .mono { font-family: 'Geist Mono', ui-monospace, SFMono-Regular, 'Roboto Mono', Menlo, Monaco, 'Liberation Mono', 'Courier New', monospace; }
+
+  header.nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    box-shadow: 0 1px 0 0 var(--gray-100);
+  }
+  .nav-inner {
+    max-width: 1080px; margin: 0 auto;
+    padding: 0 24px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; letter-spacing: -0.32px;
+    font-size: 15px;
+  }
+  .brand-mark {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    background: var(--ink);
+    display: grid; place-items: center;
+    box-shadow: var(--ring);
+  }
+  .brand-mark svg { display: block; }
+  .nav-link {
+    color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 500;
+    background: var(--gray-50);
+    padding: 6px 12px;
+    border-radius: 9999px;
+    box-shadow: var(--ring-light);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .nav-link:hover { background: #fff; }
+  .nav-link svg { width: 14px; height: 14px; }
+
+  main { max-width: 1080px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -2.0px;
+    margin: 0 0 8px;
+  }
+  .lede {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin: 0 0 24px;
+    max-width: 720px;
+  }
+  .lede code {
+    background: var(--gray-50);
+    padding: 1px 6px;
+    border-radius: 4px;
+    box-shadow: var(--ring);
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* Form */
+  .form-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .input {
+    flex: 1; min-width: 240px;
+    background: #fff;
+    color: var(--ink);
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Geist Mono', monospace;
+    font-size: 15px;
+    box-shadow: var(--ring);
+    transition: box-shadow 120ms ease;
+  }
+  .input::placeholder { color: var(--ink-4); }
+  .input:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .cta {
+    background: var(--ink);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .cta:hover { background: #000; }
+  .cta:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  /* Stats inline */
+  .stats {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .stat {
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px 14px;
+    box-shadow: var(--ring);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+  }
+  .stat .label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .stat .value {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14px;
+  }
+  .stat.used .value { color: var(--used); }
+
+  /* Filter pills */
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    margin-bottom: 12px;
+  }
+  .pill-group { display: inline-flex; gap: 4px; padding: 4px; background: var(--gray-50); border-radius: 9999px; box-shadow: var(--ring); }
+  .pill-toggle {
+    background: transparent;
+    color: var(--ink-2);
+    border: 0;
+    border-radius: 9999px;
+    padding: 6px 12px;
+    font: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer;
+  }
+  .pill-toggle.active { background: #fff; color: var(--ink); box-shadow: var(--ring); }
+  .pill-toggle .count { color: var(--ink-3); font-family: 'Geist Mono', monospace; font-size: 11px; margin-left: 4px; }
+  .pill-toggle.active .count { color: var(--ink-2); }
+
+  .ghost {
+    background: #fff;
+    color: var(--ink);
+    border: 0;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--ring-light);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .ghost:hover { background: var(--gray-50); }
+  .ghost:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .ghost.danger { color: #c44; }
+
+  .spacer { flex: 1; }
+
+  /* Results */
+  .results {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+  .empty {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 14px;
+  }
+  .empty .empty-mono { font-family: 'Geist Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 48px 1fr auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--gray-100);
+    transition: background 80ms ease;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row:hover { background: var(--gray-50); }
+  .row.used {
+    background: var(--used-bg);
+  }
+  .row.used:hover { background: #d8f0e0; }
+  .row.used .email {
+    text-decoration: line-through;
+    text-decoration-color: rgba(30, 166, 74, 0.5);
+    color: var(--ink-3);
+  }
+  .row .idx {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-4);
+    text-align: right;
+  }
+  .row .email {
+    font-family: 'Geist Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    word-break: break-all;
+    cursor: pointer;
+    user-select: all;
+  }
+  .row .email .d { color: var(--badge-text); font-weight: 500; }
+  .row.used .email .d { color: var(--used); }
+
+  .mark-btn {
+    background: #fff;
+    color: var(--ink-3);
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--ring-light);
+    display: inline-flex; align-items: center; gap: 4px;
+    min-width: 88px;
+    justify-content: center;
+  }
+  .mark-btn:hover { background: var(--gray-50); }
+  .row.used .mark-btn {
+    background: var(--used);
+    color: #fff;
+    box-shadow: none;
+  }
+  .row.used .mark-btn:hover { background: #199040; }
+  .mark-btn .check {
+    width: 12px; height: 12px;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    display: inline-block;
+    position: relative;
+  }
+  .row.used .mark-btn .check { background: #fff; border-color: #fff; }
+  .row.used .mark-btn .check::after {
+    content: ''; position: absolute;
+    inset: 1px;
+    background: var(--used);
+    clip-path: polygon(15% 50%, 35% 70%, 85% 20%, 90% 30%, 35% 85%, 10% 60%);
+  }
+
+  .copy-btn {
+    background: #fff;
+    color: var(--ink);
+    border: 0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer;
+    box-shadow: var(--ring-light);
+  }
+  .copy-btn:hover { background: var(--gray-50); }
+  .copy-btn.copied { background: var(--ink); color: #fff; box-shadow: none; }
+
+  .results-footer {
+    padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--gray-50);
+    box-shadow: 0 -1px 0 0 var(--gray-100);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .results-footer .meta {
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .pager { display: flex; gap: 4px; align-items: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--ink-3); }
+  .pager button {
+    background: #fff; border: 0; border-radius: 6px;
+    padding: 3px 8px; font: inherit; font-size: 11px;
+    cursor: pointer; box-shadow: var(--ring-light); color: var(--ink);
+  }
+  .pager button:disabled { color: var(--ink-4); cursor: not-allowed; }
+
+  /* Footer */
+  footer.page-footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gray-100);
+    color: var(--ink-3);
+    font-size: 12px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+  footer.page-footer a { color: var(--ink-2); text-decoration: none; }
+  footer.page-footer a:hover { color: var(--ink); text-decoration: underline; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--ink); color: #fff;
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: 0 12px 32px -8px rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none;
+    transition: all 180ms ease;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 600px) {
+    .nav-inner { padding: 0 16px; }
+    main { padding: 24px 16px 48px; }
+    .row { grid-template-columns: 36px 1fr auto; padding: 8px 12px; }
+    .row .copy-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 32 32" fill="none">
+          <circle cx="6" cy="16" r="2.6" fill="#fff"/>
+          <circle cx="16" cy="16" r="2.6" fill="#fff"/>
+          <circle cx="26" cy="16" r="2.6" fill="#fff"/>
+        </svg>
+      </span>
+      <span>Stipple</span>
+    </div>
+    <a class="nav-link" id="repoLink" href="#" target="_blank" rel="noopener noreferrer" hidden>
+      <svg viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>GitHub</span>
+    </a>
+  </div>
+</header>
+
+<main>
+  <h1>Stipple — все точечные вариации одного адреса.</h1>
+  <p class="lede">Введи email — получи все возможные перестановки точки в локальной части (до <code>@</code>). Жми <strong>Use</strong>, чтобы пометить адрес как использованный — отметки сохраняются в браузере.</p>
+
+  <div class="form-card">
+    <div class="input-row">
+      <input id="email" class="input" type="email" placeholder="example@mail.com" autocomplete="off" spellcheck="false" />
+      <button id="generateBtn" class="cta">Сгенерировать <span aria-hidden>→</span></button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span class="label">Всего</span><span class="value" id="statTotal">—</span></div>
+    <div class="stat used"><span class="label">Использовано</span><span class="value" id="statUsed">—</span></div>
+    <div class="stat"><span class="label">Свободно</span><span class="value" id="statFree">—</span></div>
+    <div class="stat"><span class="label">Длина</span><span class="value mono" id="statLen">—</span></div>
+    <div class="stat"><span class="label">Домен</span><span class="value mono" id="statDomain" style="font-size:13px">—</span></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="pill-group" role="tablist" aria-label="Фильтр">
+      <button class="pill-toggle active" data-filter="all">Все <span class="count" id="cAll">0</span></button>
+      <button class="pill-toggle" data-filter="unused">Свободные <span class="count" id="cUnused">0</span></button>
+      <button class="pill-toggle" data-filter="used">Использованные <span class="count" id="cUsed">0</span></button>
+    </div>
+    <div class="spacer"></div>
+    <button id="copyAllBtn" class="ghost" type="button" title="Скопировать видимые в фильтре адреса">Копировать список</button>
+    <button id="downloadBtn" class="ghost" type="button" title="Скачать список .txt">Скачать .txt</button>
+    <button id="clearMarksBtn" class="ghost danger" type="button" title="Удалить все отметки об использовании">Очистить отметки</button>
+  </div>
+
+  <div class="results" id="results">
+    <div class="empty">
+      <div class="empty-mono">пусто</div>
+      <div style="margin-top:8px">Введите адрес и нажмите «Сгенерировать»</div>
+    </div>
+  </div>
+  <div class="results-footer" id="resultsFooter" hidden>
+    <span class="meta" id="footerMeta">—</span>
+    <div class="pager" id="pager"></div>
+  </div>
+
+  <footer class="page-footer">
+    <span>Stipple · работает локально, без серверов</span>
+    <span><a id="repoLink2" href="#" target="_blank" rel="noopener noreferrer" hidden>source on github →</a></span>
+  </footer>
+</main>
+
+<div class="toast" id="toast">Скопировано</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = 'stipple_used_v1';
+  const STORAGE_LAST_EMAIL_KEY = 'stipple_last_email_v1';
+  const $ = (id) => document.getElementById(id);
+
+  const emailInput = $('email');
+  const generateBtn = $('generateBtn');
+  const resultsEl = $('results');
+  const resultsFooter = $('resultsFooter');
+  const footerMeta = $('footerMeta');
+  const pagerEl = $('pager');
+  const copyAllBtn = $('copyAllBtn');
+  const downloadBtn = $('downloadBtn');
+  const clearMarksBtn = $('clearMarksBtn');
+  const toast = $('toast');
+  const filterButtons = document.querySelectorAll('.pill-toggle');
+
+  const stat = {
+    total: $('statTotal'),
+    used: $('statUsed'),
+    free: $('statFree'),
+    len: $('statLen'),
+    domain: $('statDomain'),
+  };
+  const counts = { all: $('cAll'), unused: $('cUnused'), used: $('cUsed') };
+
+  // Show GitHub link if served from a *.github.io domain
+  if (location.hostname.endsWith('github.io')) {
+    const parts = location.hostname.split('.');
+    const user = parts[0];
+    const path = location.pathname.replace(/^\/|\/$/g, '').split('/')[0];
+    const repoUrl = path ? `https://github.com/${user}/${path}` : `https://github.com/${user}/${user}.github.io`;
+    const links = [$('repoLink'), $('repoLink2')];
+    links.forEach(a => { if (a) { a.href = repoUrl; a.hidden = false; } });
+  }
+
+  let usedSet = loadUsed();
+
+  let state = {
+    base: '',
+    domain: '',
+    list: [],
+    filter: 'all',
+    page: 0,
+    pageSize: 50,
+  };
+
+  function loadUsed() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return new Set();
+      return new Set(JSON.parse(raw));
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveUsed() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...usedSet]));
+    } catch (e) {
+      showToast('Ошибка сохранения в localStorage');
+    }
+  }
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('show'), 1300);
+  }
+
+  function fmt(n) {
+    return n.toLocaleString('ru-RU').replace(/\u00A0/g, ' ');
+  }
+
+  function parseEmail(raw) {
+    const v = raw.trim().toLowerCase();
+    const m = v.match(/^([^@\s]+)@([^@\s]+)$/);
+    if (!m) return null;
+    return { local: m[1], domain: m[2] };
+  }
+
+  function generateAll(base) {
+    const n = base.length;
+    const slots = Math.max(0, n - 1);
+    const total = 1 << slots;
+    const out = new Array(total);
+    for (let mask = 0; mask < total; mask++) {
+      let s = base[0];
+      for (let i = 1; i < n; i++) {
+        if (mask & (1 << (i - 1))) s += '.';
+        s += base[i];
+      }
+      out[mask] = s;
+    }
+    return out;
+  }
+
+  function getFiltered() {
+    const { list, domain, filter } = state;
+    if (filter === 'all') return list;
+    return list.filter(local => {
+      const isUsed = usedSet.has(local + '@' + domain);
+      return filter === 'used' ? isUsed : !isUsed;
+    });
+  }
+
+  function highlight(local) {
+    return local.replace(/\./g, '<span class="d">.</span>');
+  }
+
+  function renderRows() {
+    const { list, domain, page, pageSize } = state;
+    if (list.length === 0) {
+      resultsEl.innerHTML = `
+        <div class="empty">
+          <div class="empty-mono">пусто</div>
+          <div style="margin-top:8px">Введите адрес и нажмите «Сгенерировать»</div>
+        </div>`;
+      resultsFooter.hidden = true;
+      return;
+    }
+
+    const filtered = getFiltered();
+    const totalUsed = countUsed();
+
+    counts.all.textContent = list.length;
+    counts.unused.textContent = list.length - totalUsed;
+    counts.used.textContent = totalUsed;
+
+    if (filtered.length === 0) {
+      resultsEl.innerHTML = `
+        <div class="empty">
+          <div class="empty-mono">фильтр пуст</div>
+          <div style="margin-top:8px">Нет адресов в этой категории</div>
+        </div>`;
+      resultsFooter.hidden = true;
+      return;
+    }
+
+    const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    if (state.page >= pages) state.page = pages - 1;
+    const start = state.page * pageSize;
+    const end = Math.min(start + pageSize, filtered.length);
+    const slice = filtered.slice(start, end);
+
+    let html = '';
+    for (let i = 0; i < slice.length; i++) {
+      const local = slice[i];
+      const email = `${local}@${domain}`;
+      const idx = start + i + 1;
+      const isUsed = usedSet.has(email);
+      html += `
+        <div class="row${isUsed ? ' used' : ''}" data-email="${email}">
+          <span class="idx">${idx}</span>
+          <span class="email">${highlight(local)}<span style="color:var(--ink-3)">@${domain}</span></span>
+          <button class="mark-btn" type="button" data-mark="${email}">
+            <span class="check"></span>
+            <span class="lbl">${isUsed ? 'Used' : 'Use'}</span>
+          </button>
+          <button class="copy-btn" type="button" data-copy="${email}">Copy</button>
+        </div>
+      `;
+    }
+    resultsEl.innerHTML = html;
+    resultsFooter.hidden = false;
+
+    footerMeta.textContent = `показано ${fmt(start + 1)}–${fmt(end)} из ${fmt(filtered.length)} (${state.filter})`;
+
+    pagerEl.innerHTML = `
+      <button id="prevBtn" ${state.page === 0 ? 'disabled' : ''}>← prev</button>
+      <span style="padding:0 6px">${state.page + 1}/${pages}</span>
+      <button id="nextBtn" ${state.page >= pages - 1 ? 'disabled' : ''}>next →</button>
+    `;
+    document.getElementById('prevBtn').onclick = () => { if (state.page > 0) { state.page--; renderRows(); } };
+    document.getElementById('nextBtn').onclick = () => {
+      if (state.page < pages - 1) { state.page++; renderRows(); }
+    };
+  }
+
+  function countUsed() {
+    if (state.list.length === 0) return 0;
+    let c = 0;
+    const dom = state.domain;
+    for (const local of state.list) {
+      if (usedSet.has(local + '@' + dom)) c++;
+    }
+    return c;
+  }
+
+  function updateStats() {
+    if (state.list.length === 0) {
+      stat.total.textContent = '—';
+      stat.used.textContent = '—';
+      stat.free.textContent = '—';
+      stat.len.textContent = '—';
+      stat.domain.textContent = '—';
+      return;
+    }
+    const u = countUsed();
+    stat.total.textContent = fmt(state.list.length);
+    stat.used.textContent = fmt(u);
+    stat.free.textContent = fmt(state.list.length - u);
+    stat.len.textContent = state.base.length;
+    stat.domain.textContent = '@' + state.domain;
+  }
+
+  function generate() {
+    const parsed = parseEmail(emailInput.value);
+    if (!parsed) {
+      showToast('Неверный формат email');
+      return;
+    }
+    const cleanLocal = parsed.local.replace(/\./g, '');
+    if (cleanLocal.length === 0) {
+      showToast('Локальная часть пустая');
+      return;
+    }
+    const slots = Math.max(0, cleanLocal.length - 1);
+    const total = 1 << slots;
+    if (total > 200000) {
+      if (!confirm(`Длина "${cleanLocal}" даёт ${fmt(total)} вариаций. Это может подвесить браузер. Продолжить?`)) {
+        return;
+      }
+    }
+
+    state.base = cleanLocal;
+    state.domain = parsed.domain;
+    state.list = generateAll(cleanLocal);
+    state.page = 0;
+
+    // Remember the last email so it's restored on next visit
+    try { localStorage.setItem(STORAGE_LAST_EMAIL_KEY, emailInput.value.trim()); } catch (e) {}
+
+    updateStats();
+    renderRows();
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return Promise.resolve();
+  }
+
+  // Events
+  generateBtn.addEventListener('click', generate);
+  emailInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') generate(); });
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.filter = btn.dataset.filter;
+      state.page = 0;
+      renderRows();
+    });
+  });
+
+  resultsEl.addEventListener('click', (e) => {
+    const markBtn = e.target.closest('.mark-btn');
+    if (markBtn) {
+      const email = markBtn.dataset.mark;
+      if (usedSet.has(email)) {
+        usedSet.delete(email);
+        showToast('Снята отметка: ' + email);
+      } else {
+        usedSet.add(email);
+        showToast('Помечено: ' + email);
+      }
+      saveUsed();
+      updateStats();
+      renderRows();
+      return;
+    }
+    const copyBtn = e.target.closest('.copy-btn');
+    if (copyBtn) {
+      const email = copyBtn.dataset.copy;
+      copyText(email).then(() => {
+        copyBtn.textContent = 'Copied';
+        copyBtn.classList.add('copied');
+        showToast('Скопировано: ' + email);
+        setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 1100);
+      });
+      return;
+    }
+    const emailSpan = e.target.closest('.email');
+    if (emailSpan) {
+      const row = emailSpan.closest('.row');
+      const email = row && row.dataset.email;
+      if (email) {
+        copyText(email).then(() => showToast('Скопировано: ' + email));
+      }
+    }
+  });
+
+  copyAllBtn.addEventListener('click', () => {
+    const filtered = getFiltered();
+    if (filtered.length === 0) { showToast('Нет адресов для копирования'); return; }
+    const text = filtered.map(l => `${l}@${state.domain}`).join('\n');
+    copyText(text).then(() => showToast(`Скопировано ${fmt(filtered.length)} адресов`));
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const filtered = getFiltered();
+    if (filtered.length === 0) { showToast('Нет адресов для скачивания'); return; }
+    const text = filtered.map(l => `${l}@${state.domain}`).join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safe = (state.base || 'mail') + '_' + state.domain + '_' + state.filter;
+    a.href = url; a.download = `stipple_${safe}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`Скачано ${fmt(filtered.length)} адресов`);
+  });
+
+  clearMarksBtn.addEventListener('click', () => {
+    if (usedSet.size === 0) { showToast('Отметок нет'); return; }
+    if (!confirm(`Удалить все отметки (${fmt(usedSet.size)} шт.)? Это нельзя отменить.`)) return;
+    usedSet.clear();
+    saveUsed();
+    updateStats();
+    renderRows();
+    showToast('Отметки очищены');
+  });
+
+  // On load: restore last entered email (if any) and regenerate; otherwise just focus the input
+  const lastEmail = (() => {
+    try { return localStorage.getItem(STORAGE_LAST_EMAIL_KEY) || ''; } catch (e) { return ''; }
+  })();
+  if (lastEmail) {
+    emailInput.value = lastEmail;
+    generate();
+  } else {
+    emailInput.focus();
+  }
+})();
+</script>
+
+</body>
+</html>
